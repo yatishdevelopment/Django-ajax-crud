@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+    crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="alert alert-primary text-center">
+            Django ajax crud tutorial
+        </div>
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="form-group">
+                <label >Mobile name</label>
+                <input type="text" class="form-control" id="idMobileName" placeholder="Enter mobile name">
+            </div>
+            <div class="form-group">
+                <label >Color</label>
+                <input type="text" class="form-control" id="idcolor" placeholder="Enter mobile color">
+            </div>
+            <div class="form-group">
+                <label >Ram</label>
+                <input type="text" class="form-control" id="idram" placeholder="Enter mobile ram">
+            </div>
+            <div class="form-group">
+                <label >Price</label>
+                <input type="text" class="form-control" id="idprice" placeholder="Enter mobile price">
+            </div>
+            <button class="btn btn-primary" onclick="saveMobile(event)" id="btnSave">Add mobile</button>
+          </div>
+          <div class="col-sm-7">
+            <h5 class="alert alert-primary text-center">Mobiles data</h5>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Mobile name</th>
+                    <th scope="col">Ram</th>
+                    <th scope="col">Color</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="idTbody">
+                {% for mobile in mobiles %}
+                  <tr id="row{{mobile.id}}">
+                      <td id="idName{{mobile.id}}">{{mobile.name}}</td>
+                      <td id="idram{{mobile.id}}">{{mobile.ram}}</td>
+                      <td id="idcolor{{mobile.id}}">{{mobile.color}}</td>
+                      <td id="idprice{{mobile.id}}">{{mobile.price}}</td>
+                      <td><input type="button" onclick="EditMobile({{mobile.id}})"  class="btn btn-success btn-sm" value="Edit"/><input type="button"class="ml-1 btn btn-danger btn-sm" onclick="onDelete({{mobile.id}})" value="Delete"/></td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+
+    function onDelete(id){
+        postData ={"id":id}
+        sendDataToServer("delete_mobile/",postData,function(data){
+            if(data.code==0){
+                alert(data.msg)
+                return false;
+            }
+            $("#row"+id).hide()
+        })
+
+    }
+
+    function EditMobile(id){
+       var name = $("#idName"+id).html();
+       var ram = $("#idram"+id).html();
+       var color = $("#idcolor"+id).html();
+       var price = $("#idprice"+id).html();
+       $("#idMobileName").val(name)
+       $("#idcolor").val(color)
+       $("#idprice").val(price)
+       $("#idram").val(ram)
+       $("#btnSave").html("Update mobile")
+       $("#btnSave").attr("data-sid",id)
+    }
+
+    function saveMobile(event){
+        var mobileName = $("#idMobileName").val();
+        var ram = $("#idram").val();
+        var color = $("#idcolor").val();
+        var price = $("#idprice").val();
+        var mobileId = $("#btnSave").attr("data-sid");
+
+        
+
+        if (mobileName=="" || ram=="" || color=="" || price ==""){
+            alert("All fields are required")
+            return false;
+        };
+        postData = {
+            "mobileName":mobileName,
+            "ram":ram,
+            "color":color,
+            "price":price
+        }
+        if (mobileId != undefined){
+            postData["id"] = mobileId;
+        }
+
+        sendDataToServer("save_mobile/",postData,function(data){
+            if(data.code==0){
+                alert(data.msg)
+                return false;
+            }
+            $("#btnSave").html("Add mobile")
+
+            $(".form-control").val("")
+            if (mobileId != undefined){
+                $("#idName"+mobileId).html(mobileName);
+                $("#idram"+mobileId).html(ram);
+                $("#idcolor"+mobileId).html(color);
+                $("#idprice"+mobileId).html(price);
+            }else{
+
+                var newtableData = '<tr><td id="idName'+data.id+'">'+mobileName+'</td><td id="idram'+data.id+'">'+ram+'</td><td id="idcolor'+data.id+'">'+color+'</td><td id="idprice'+data.id+'">'+price+'</td><td><input type="button" onclick="EditMobile('+data.id+')"  class="btn btn-success btn-sm" value="Edit"/><input type="button"class="ml-1 btn btn-danger btn-sm" onclick="onDelete('+data.id+')" value="Delete"/></td> </tr>'
+                $("#idTbody").append(newtableData)
+        }
+
+        })
+
+    }
+function sendDataToServer(url,postData,callback){
+    $.ajax({
+        dataType: "json",
+        type: "POST",
+        url: url,
+        data: postData,
+        beforeSend: function() {},
+        complete: function() {},
+        success: function(data) {
+            if (callback) {
+                callback(data);
+            }
+        },
+        error: function(data) {}
+    });
+
+}
+</script>
